@@ -3,12 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Tidebound – a free sun and moon card game for your browser</title>
+    <meta
+      name="description"
+      content="Every card has a sun number and a moon number, and the tide keeps flipping the sky. Play free against five AI spirits, a daily challenge or a friend."
+    />
+    <link rel="canonical" href="https://tidebound.isstiaung.me/" />
     <meta name="theme-color" content="#0d1b2e" />
-    <meta name="description" content="Tidebound: a two-sky card duel. Every card has a sun number and a moon number. Win two of three shrines." />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Icons -->
+    <link rel="icon" href="./favicon.ico" sizes="32x32" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icon.svg" />
-    <title>Tidebound</title>
+
+    <!-- Link previews (Open Graph, used by most apps and sites) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tidebound" />
+    <meta property="og:url" content="https://tidebound.isstiaung.me/" />
+    <meta property="og:title" content="Tidebound – a sun and moon card game" />
+    <meta
+      property="og:description"
+      content="Every card has a sun number and a moon number, and the tide keeps flipping the sky. Free to play in your browser, on any device."
+    />
+    <meta property="og:image" content="https://tidebound.isstiaung.me/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Three Tidebound cards, one turned to show its moon number on top, beside the Tidebound wordmark."
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Structured data for search engines -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Tidebound",
+        "url": "https://tidebound.isstiaung.me/",
+        "image": "https://tidebound.isstiaung.me/og-image.png",
+        "description": "A card game where every card has a sun number and a moon number, and the tide keeps flipping the sky. Play against five AI spirits, a daily challenge, or a friend on the same device.",
+        "genre": ["Card game", "Strategy"],
+        "gamePlatform": "Web browser",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "playMode": ["SinglePlayer", "MultiPlayer"],
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Sainath" },
+        "license": "https://opensource.org/licenses/MIT",
+        "sameAs": ["https://github.com/isstiaung/tidebound"]
+      }
+    </script>
   </head>
   <body>
     <canvas id="stars" class="stars" aria-hidden="true"></canvas>
@@ -179,6 +229,9 @@
       </div>
     </div>
 
+    <noscript>
+      <p style="padding: 24px; text-align: center">Tidebound needs JavaScript to play. Turn it on and reload the page.</p>
+    </noscript>
     <canvas id="particles" class="particles" aria-hidden="true"></canvas>
     <script type="module" src="/src/main.ts"></script>
   </body>

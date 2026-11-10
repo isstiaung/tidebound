@@ -1,13 +1,19 @@
 {
+  "id": "./",
   "name": "Tidebound",
   "short_name": "Tidebound",
-  "description": "A two-sky card duel. Every card has a sun number and a moon number.",
+  "description": "A card game where every card has a sun number and a moon number, and the tide keeps flipping the sky.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0d1b2e",
   "theme_color": "#0d1b2e",
+  "categories": ["games", "entertainment"],
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
