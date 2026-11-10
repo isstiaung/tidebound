@@ -1,9 +1,10 @@
 name: CI
 
+# Pull requests only: pushes to main are tested by the deploy workflow,
+# and listening to branch pushes too would run every PR check twice.
 on:
   pull_request:
-  push:
-    branches-ignore: [main]
+  workflow_dispatch:
 
 jobs:
   check:
