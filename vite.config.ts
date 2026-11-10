@@ -14,7 +14,8 @@ function serviceWorker(): Plugin {
       const files = Object.keys(bundle)
         .filter((f) => !f.endsWith('.map'))
         .map((f) => `./${f}`);
-      const precache = ['./', ...files.filter((f) => f !== './index.html'), './index.html', './icon.svg', './manifest.webmanifest'];
+      const icons = ['./icon.svg', './favicon.ico', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+      const precache = ['./', ...files.filter((f) => f !== './index.html'), './index.html', './manifest.webmanifest', ...icons];
       const version = createHash('sha256').update(precache.join('\n')).digest('hex').slice(0, 12);
       const source = readFileSync(new URL('./sw.template.js', import.meta.url), 'utf8')
         .replace('__PRECACHE__', JSON.stringify([...new Set(precache)], null, 2))
@@ -24,10 +25,37 @@ function serviceWorker(): Plugin {
   };
 }
 
+/** Where the game is published. Used for the sitemap and robots.txt. */
+const SITE_URL = 'https://tidebound.isstiaung.me/';
+
+/** robots.txt and a sitemap, dated with the build so search engines see fresh content. */
+function seoFiles(): Plugin {
+  return {
+    name: 'tidebound-seo-files',
+    apply: 'build',
+    generateBundle() {
+      const today = new Date().toISOString().slice(0, 10);
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n` });
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sitemap.xml',
+        source: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITE_URL}</loc>
+    <lastmod>${today}</lastmod>
+  </url>
+</urlset>
+`,
+      });
+    },
+  };
+}
+
 // base: './' keeps every asset path relative, so the build works from any
 // host or sub-path (GitHub Pages, Netlify, Vercel, S3, a USB stick...).
 export default defineConfig({
   base: './',
   build: { target: 'es2022' },
-  plugins: [serviceWorker()],
+  plugins: [serviceWorker(), seoFiles()],
 });
