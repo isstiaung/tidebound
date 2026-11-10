@@ -117,7 +117,7 @@ export const SPIRITS: Spirit[] = [
     epithet: 'Eater of light',
     difficulty: 'oracle',
     rules: { extras: [...reserve('eclipse', 3), ...reserve('tidecall', 1)], fog: true },
-    twist: 'Eclipse season: three extra Eclipses and a Tidecaller in the deck. Fog hides where the tide goes next.',
+    twist: 'Eclipse season: three extra Eclipses and a Tidecaller in the deck. Fog hides the tide, and it wanders from shrine to shrine at random.',
     greeting: 'Sun or moon, it is all the same to me. I eat them both.',
     hue: '#c6a7ff',
     sigil: sig('<path d="M32 20v28"/><path d="M32 24c-6-12-22-14-22-2s12 12 22 6M32 24c6-12 22-14 22-2s-12 12-22 6"/><path d="M32 34c-4 6-14 10-14 16M32 34c4 6 14 10 14 16"/><circle cx="32" cy="18" r="3"/>'),

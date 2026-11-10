@@ -1224,7 +1224,15 @@ button {
 /* ---------------------------------------------------------------- title modes */
 
 .resume {
-  margin-bottom: 14px;
+  margin-bottom: 8px;
+}
+.resume-note {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.btn.resume + .resume-note[hidden] + .modes {
+  margin-top: 6px;
 }
 .modes {
   list-style: none;

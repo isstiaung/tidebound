@@ -27,7 +27,7 @@ export const ABILITY_TEXT: Record<Ability, string> = {
   undertow: "Sends your opponent's newest card here back to their hand, unless it is an Undertow.",
   twilight: 'Always counts its higher number.',
   lantern: 'Your other cards in this shrine get +1.',
-  echo: "Worth as much as your opponent's best card in this shrine.",
+  echo: "Worth as much as your opponent's best card in this shrine, bonuses included.",
   drift: 'Draw an extra card.',
 };
 

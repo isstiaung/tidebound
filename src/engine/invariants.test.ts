@@ -99,6 +99,15 @@ describe('abilities in detail', () => {
     expect(shrineTotals(s, 0, 'moon')[0]).toBe(1);
   });
 
+  it("echo copies the opposing card's value with its lantern bonus", () => {
+    const s = board((s) => {
+      s.shrines[0].sides[0] = [byAbility('echo')];
+      s.shrines[0].sides[1] = [byAbility('lantern'), plain(8)];
+    });
+    // their 8 counts as 9 with the lantern, so echo is 9; their total is 3 + 9
+    expect(shrineTotals(s, 0)).toEqual([9, 12]);
+  });
+
   it('two lanterns light each other', () => {
     const s = board((s) => {
       s.shrines[0].sides[0] = [byAbility('lantern', 0), byAbility('lantern', 1)];
@@ -166,6 +175,42 @@ describe('abilities in detail', () => {
     // under the moon: 1+2+3+6 = 12 vs 9+8+7+6 = 30 -> player 1 wins
     expect(s1.shrines[0].sealed?.phase).toBe('moon');
     expect(s1.shrines[0].sealed?.winner).toBe(1);
+  });
+});
+
+describe('fog', () => {
+  function tidePath(seed: number, fog: boolean): number[] {
+    let s = newGame({ seed, starter: 0, rules: { fog } });
+    const path = [s.tideMarker!];
+    const rand = makeRng(seed);
+    while (!s.over && path.length < 12) {
+      const moves = legalMoves(s);
+      s = applyMove(s, moves.length ? moves[Math.floor(rand() * moves.length)] : { type: 'pass' });
+      if (s.tideMarker !== null && s.tideMarker !== path.at(-1)) path.push(s.tideMarker);
+    }
+    return path;
+  }
+
+  it('without fog the tide moves in order', () => {
+    for (let seed = 0; seed < 10; seed++) {
+      const p = tidePath(seed, false);
+      for (let i = 1; i < p.length; i++) {
+        // the next shrine in order, skipping any that sealed
+        expect([(p[i - 1] + 1) % 3, (p[i - 1] + 2) % 3]).toContain(p[i]);
+      }
+    }
+  });
+
+  it('in fog the tide wanders, but the same seed gives the same path', () => {
+    let backwards = 0;
+    for (let seed = 0; seed < 30; seed++) {
+      const p = tidePath(seed, true);
+      expect(tidePath(seed, true)).toEqual(p);
+      for (let i = 1; i < p.length; i++) if (p[i] === (p[i - 1] + 2) % 3) backwards++;
+    }
+    // in order, the tide never steps "backwards" while all three are open;
+    // in fog it does so about half the time
+    expect(backwards).toBeGreaterThan(10);
   });
 });
 
@@ -318,6 +363,16 @@ describe('AI fairness', () => {
     const a = chooseMove(base, 'oracle', makeRng(5));
     const b = chooseMove(alt, 'oracle', makeRng(5));
     expect(a).toEqual(b);
+  });
+
+  it('does not know where the tide goes in fog', () => {
+    const base = newGame({ seed: 21, starter: 1, rules: { fog: true } });
+    for (const marker of [0, 1, 2]) {
+      const alt: GameState = { ...structuredClone(base), tideMarker: marker, rng: 12345 + marker };
+      for (const level of ['oracle', 'novice'] as const) {
+        expect(chooseMove(alt, level, makeRng(8))).toEqual(chooseMove(base, level, makeRng(8)));
+      }
+    }
   });
 
   it('scores a won game as decisively better than a lost one', () => {

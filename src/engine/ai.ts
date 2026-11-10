@@ -43,7 +43,8 @@ export function evaluate(s: GameState, me: PlayerId): number {
     if (!sh.anchored) {
       const turnsLeft = open * 1.4;
       let k = turnsLeft / (3 * s.rules.tideEvery); // tide cycles 3 shrines // tide every 2 turns, cycling 3 shrines
-      if (s.tideMarker === i) k += open <= 1 ? 0.25 : 0.6;
+      // Under fog nobody knows where the tide is, so the marker isn't used.
+      if (s.tideMarker === i && !s.rules.fog) k += open <= 1 ? 0.25 : 0.6;
       pFlip = (1 - Math.exp(-2 * k)) / 2;
     }
 
@@ -63,17 +64,24 @@ export function evaluate(s: GameState, me: PlayerId): number {
 }
 
 /**
- * Replace hidden information (opponent's hand, deck order) with one random
- * guess consistent with what `me` can see.
+ * Replace hidden information (opponent's hand, deck order and, under fog,
+ * the tide's position and path) with one random guess consistent with what
+ * `me` can see.
  */
-function determinize(s: GameState, me: PlayerId, rand: () => number): GameState {
+export function determinize(s: GameState, me: PlayerId, rand: () => number): GameState {
   const op = other(me);
   const unseen = shuffle([...s.hands[op], ...s.deck], rand);
   const handSize = s.hands[op].length;
   const hands: [number[], number[]] = [[], []];
   hands[me] = s.hands[me].slice();
   hands[op] = unseen.slice(0, handSize);
-  return { ...s, hands, deck: unseen.slice(handSize) };
+  const world: GameState = { ...s, hands, deck: unseen.slice(handSize) };
+  if (s.rules.fog && s.tideMarker !== null) {
+    const open = s.shrines.map((sh, i) => (sh.sealed ? -1 : i)).filter((i) => i >= 0);
+    world.tideMarker = open[Math.floor(rand() * open.length)];
+    world.rng = Math.floor(rand() * 2 ** 32);
+  }
+  return world;
 }
 
 export function chooseMove(s: GameState, difficulty: Difficulty, rand: () => number = Math.random): Move {
@@ -85,10 +93,11 @@ export function chooseMove(s: GameState, difficulty: Difficulty, rand: () => num
   if (difficulty === 'novice') {
     // Plays loosely: sometimes on a whim, otherwise a noisy greedy choice.
     if (rand() < 0.35) return moves[Math.floor(rand() * moves.length)];
+    const world = determinize(s, me, rand);
     let best = moves[0];
     let bestScore = -Infinity;
     for (const m of moves) {
-      const v = evaluate(applyMove(s, m), me) + (rand() - 0.5) * 50;
+      const v = evaluate(applyMove(world, m), me) + (rand() - 0.5) * 50;
       if (v > bestScore) [best, bestScore] = [m, v];
     }
     return best;

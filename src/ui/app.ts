@@ -1,4 +1,4 @@
-import { chooseMove, type Difficulty } from '../engine/ai';
+import type { Difficulty } from '../engine/ai';
 import { ABILITY_TEXT, BASE_DECK, card, CARDS, type Ability, type Phase } from '../engine/cards';
 import {
   applyMove,
@@ -17,6 +17,7 @@ import {
   type Move,
   type PlayerId,
 } from '../engine/game';
+import { thinkMove } from './aiClient';
 import { createCard, createCardBack, orientCard } from './cardView';
 import { burstAt, flyFrom, initParticles, reducedMotion, shower, startStarfield, sweep } from './fx';
 import { ABILITY_ICON, ICON } from './icons';
@@ -221,6 +222,7 @@ interface StartOpts {
 }
 
 function startGame(m: Mode, opts: StartOpts = {}) {
+  forfeitSavedDuel();
   abandon();
   mode = m;
   spirit = opts.spirit ?? ORACLE;
@@ -236,6 +238,20 @@ function startGame(m: Mode, opts: StartOpts = {}) {
   persist();
   if (isAI()) later(() => quip(spirit.greeting && mode === 'voyage' ? spirit.greeting : pick(spirit.quips.start)), 500);
   afterChange(0);
+}
+
+/** Abandoning a quick duel you've started counts as a loss, so it can't be dodged. */
+function forfeits(saved: SavedGame): boolean {
+  return saved.mode === 'duel' && saved.game.turn >= 2;
+}
+
+function forfeitSavedDuel() {
+  const saved = loadRaw<SavedGame>(SAVE_KEY);
+  if (!validSave(saved) || !forfeits(saved)) return;
+  const d: Difficulty = saved.difficulty === 'novice' ? 'novice' : 'oracle';
+  record[d][1]++;
+  save(RECORD_KEY, record);
+  remove(SAVE_KEY);
 }
 
 /** A save we can trust: right shape, unfinished, from this version. */
@@ -266,6 +282,7 @@ function resumeGame() {
   difficulty = saved.difficulty === 'novice' ? 'novice' : 'oracle';
   day = saved.day;
   game = saved.game;
+  game.rng ??= Math.floor(Math.random() * 2 ** 32); // saves from before fog had randomness
   log = saved.log;
   handoff = mode === 'hotseat';
   seat = game.current;
@@ -411,10 +428,17 @@ function afterChange(delay: number) {
   if (!aiTurn && canPlay(game)) return;
   busy = true;
   render();
-  later(() => {
-    if (!game || game.over) return;
-    commit(aiTurn ? chooseMove(game, difficulty) : { type: 'pass' });
-  }, Math.max(delay, 500));
+  // The AI thinks in a worker while the pause plays out; whichever takes
+  // longer decides when the move lands. Results for an abandoned game, or a
+  // position that has since changed, are dropped.
+  const g = gen;
+  const position = game;
+  const move: Promise<Move> = aiTurn ? thinkMove(game, difficulty) : Promise.resolve({ type: 'pass' });
+  const pause = new Promise<void>((resolve) => later(resolve, Math.max(delay, 500)));
+  void Promise.all([move, pause]).then(([m]) => {
+    if (g !== gen || game !== position || !game || game.over) return;
+    commit(m);
+  });
 }
 
 /**
@@ -524,7 +548,12 @@ function leaveGame(to: 'title' | 'voyage') {
 }
 
 function renderTitle() {
-  $('btn-resume').hidden = !validSave(loadRaw<SavedGame>(SAVE_KEY));
+  const saved = loadRaw<SavedGame>(SAVE_KEY);
+  const resumable = validSave(saved);
+  $('btn-resume').hidden = !resumable;
+  const note = $('resume-note');
+  note.hidden = !(resumable && forfeits(saved));
+  note.textContent = 'You have a quick duel in progress. Starting any new game counts it as a loss.';
   document.querySelectorAll<HTMLButtonElement>('[data-diff]').forEach((b) => {
     const on = b.dataset.diff === settings.difficulty;
     b.classList.toggle('on', on);

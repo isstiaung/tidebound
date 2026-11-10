@@ -54,6 +54,8 @@ export type GameEvent =
 
 export interface GameState {
   rules: Rules;
+  /** PRNG state for in-game randomness (the tide's path under fog). */
+  rng: number;
   deck: number[];
   hands: [number[], number[]];
   shrines: Shrine[];
@@ -119,6 +121,7 @@ export function newGame(opts: { seed?: number; starter?: PlayerId; rules?: Parti
 
   return {
     rules,
+    rng: Math.floor(rand() * 2 ** 32),
     deck,
     hands,
     shrines: phases.map((phase) => ({
@@ -154,10 +157,15 @@ export function sideValues(s: GameState, shrine: number, player: PlayerId, phase
   const mine = sh.sides[player];
   const theirs = sh.sides[other(player)];
   const lanterns = mine.filter((id) => card(id).ability === 'lantern').length;
+  // Echo copies the best opposing card as it actually counts, Lantern bonus
+  // included. Opposing Echoes are skipped so two Echoes can't chase each other.
+  const theirLanterns = theirs.filter((id) => card(id).ability === 'lantern').length;
   let oppBest = 0;
   for (const id of theirs) {
     const c = card(id);
-    if (c.ability !== 'echo') oppBest = Math.max(oppBest, baseValue(c, ph));
+    if (c.ability === 'echo') continue;
+    const bonus = theirLanterns - (c.ability === 'lantern' ? 1 : 0);
+    oppBest = Math.max(oppBest, baseValue(c, ph) + bonus);
   }
   return mine.map((id) => {
     const c = card(id);
@@ -298,8 +306,25 @@ function tideStep(s: GameState, cause: 'tide' | 'tidecall') {
   advanceMarker(s);
 }
 
+/** Advance the game's PRNG (mulberry32) and return a number in [0, 1). */
+function nextRandom(s: GameState): number {
+  s.rng = (s.rng + 0x6d2b79f5) >>> 0;
+  let t = s.rng;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 function advanceMarker(s: GameState) {
   if (s.tideMarker === null) return;
+  if (s.rules.fog) {
+    // In fog the tide wanders: the next shrine is random (never the same one
+    // twice in a row while there's a choice), so one flip reveals nothing.
+    const open = s.shrines.map((sh, i) => (sh.sealed ? -1 : i)).filter((i) => i >= 0);
+    const choices = open.length > 1 ? open.filter((i) => i !== s.tideMarker) : open;
+    s.tideMarker = choices.length ? choices[Math.floor(nextRandom(s) * choices.length)] : null;
+    return;
+  }
   const n = s.shrines.length;
   for (let k = 1; k <= n; k++) {
     const idx = (s.tideMarker + k) % n;
