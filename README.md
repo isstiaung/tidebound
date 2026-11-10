@@ -1,5 +1,11 @@
 # Tidebound
 
+[![CI](https://github.com/isstiaung/tidebound/actions/workflows/ci.yml/badge.svg)](https://github.com/isstiaung/tidebound/actions/workflows/ci.yml)
+[![Deploy](https://github.com/isstiaung/tidebound/actions/workflows/deploy.yml/badge.svg)](https://github.com/isstiaung/tidebound/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**[Play it in your browser](https://isstiaung.github.io/tidebound/)**. No install or account needed, and it works offline once loaded.
+
 A two-sky card duel for the browser. Every card has two numbers: a **sun** number on top and a **moon** number printed upside down. Each of the three shrines sits under the sun or the moon, and cards in a shrine physically turn over to show the number that counts. A tide sweeps across the shrines, flipping their skies on a schedule you can see coming.
 
 ## Ways to play
@@ -67,3 +73,16 @@ src/ui/fx.ts          starfield, particles, tide sweeps, card flights
 src/ui/sound.ts       synthesized sound effects and ocean ambience
 public/               icon, web manifest, service worker
 ```
+
+## Contributing
+
+Bug reports, balance ideas, new spirits and code are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Credits
+
+- Typefaces: [IM Fell English](https://fonts.google.com/specimen/IM+Fell+English) by Igino Marini and [Outfit](https://github.com/Outfitio/Outfit-Fonts) by the Outfit Project Authors, both under the [SIL Open Font License 1.1](https://openfontlicense.org), bundled via [Fontsource](https://fontsource.org).
+- Everything else (cards, sigils, sounds and code) is original to this project.
+
+## License
+
+[MIT](LICENSE)
