@@ -800,6 +800,10 @@ button {
   .altar-name {
     font-size: 15px;
   }
+  /* "Lighthouse" fits a narrow column; "The Lighthouse" doesn't */
+  .altar-name .the {
+    display: none;
+  }
   .altar-sky {
     display: none;
   }

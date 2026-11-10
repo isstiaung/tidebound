@@ -21,13 +21,13 @@ export interface Card {
 
 export const ABILITY_TEXT: Record<Ability, string> = {
   none: '',
-  eclipse: 'Flips this shrine between sun and moon.',
-  tidecall: 'Calls the tide early: the marked shrine flips now and the marker moves on.',
-  anchor: "Locks this shrine's sky. Nothing can flip it again.",
-  undertow: "Sends your opponent's newest card here back to their hand, unless it is an Undertow.",
+  eclipse: "Flips this shrine's sky.",
+  tidecall: 'Makes the tide flip its next shrine right now.',
+  anchor: "Locks this shrine's sky for the rest of the game.",
+  undertow: "Returns your opponent's last card in this shrine to their hand (unless it's an Undertow).",
   twilight: 'Always counts its higher number.',
   lantern: 'Your other cards in this shrine get +1.',
-  echo: "Worth as much as your opponent's best card in this shrine, bonuses included.",
+  echo: "Counts the same as your opponent's best card in this shrine.",
   drift: 'Draw an extra card.',
 };
 
