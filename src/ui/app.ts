@@ -166,10 +166,6 @@ function who(p: PlayerId): string {
   if (isAI()) return p === 0 ? 'You' : spirit.name;
   return `Player ${p + 1}`;
 }
-function whoMid(p: PlayerId): string {
-  if (isAI()) return p === 0 ? 'you' : spirit.ref;
-  return `Player ${p + 1}`;
-}
 function whose(p: PlayerId): string {
   if (isAI()) return p === 0 ? 'your' : `${spirit.ref}'s`;
   return `Player ${p + 1}'s`;
@@ -182,29 +178,32 @@ function describe(e: GameEvent): string | null {
     case 'play':
       return `${who(e.player)} ${verb(e.player, 'play', 'plays')} ${card(e.cardId).name} to ${shrineRef(e.shrine)}.`;
     case 'pass':
-      return `${who(e.player)} ${verb(e.player, 'have', 'has')} no move and ${verb(e.player, 'pass', 'passes')}.`;
+      return `${who(e.player)} can't play and ${verb(e.player, 'pass', 'passes')}.`;
     case 'flip': {
       const sky = e.to === 'sun' ? 'the sun' : 'the moon';
-      if (e.cause === 'tide') return `The tide turns ${shrineRef(e.shrine)} to ${sky}.`;
-      if (e.cause === 'eclipse') return `Eclipse turns ${shrineRef(e.shrine)} to ${sky}.`;
-      return `Tidecaller calls the tide early: ${shrineRef(e.shrine)} turns to ${sky}.`;
+      if (e.cause === 'tide') return `The tide flips ${shrineRef(e.shrine)} to ${sky}.`;
+      if (e.cause === 'eclipse') return `Eclipse flips ${shrineRef(e.shrine)} to ${sky}.`;
+      return `Tidecaller flips ${shrineRef(e.shrine)} to ${sky}.`;
     }
     case 'held':
-      return `The anchor holds ${shrineRef(e.shrine)} steady.`;
+      return `${shrineName(e.shrine)} is anchored, so the tide passes it by.`;
     case 'anchor':
-      return `${shrineName(e.shrine)} is anchored. Its sky can no longer change.`;
+      return `${shrineName(e.shrine)} is anchored. Its sky is locked.`;
     case 'undertow':
       return `Undertow pulls ${card(e.cardId).name} back to ${whose(e.player)} hand.`;
     case 'draw':
       return e.extra ? `${who(e.player)} ${verb(e.player, 'draw', 'draws')} an extra card.` : null;
     case 'seal': {
       const [a, b] = e.seal.totals;
-      const sky = e.seal.phase === 'sun' ? 'sun' : 'moon';
-      const v = viewer();
-      const score = isAI() ? `${v === 0 ? a : b} to ${v === 0 ? b : a}` : `Player 1 ${a}, Player 2 ${b}`;
-      if (e.seal.winner === null) return `${shrineName(e.shrine)} seals under the ${sky}, ${score}. Nobody takes it.`;
-      const tie = a === b ? ' on the tie' : '';
-      return `${shrineName(e.shrine)} seals under the ${sky}, ${score}. Taken by ${whoMid(e.seal.winner)}${tie}.`;
+      const w = e.seal.winner;
+      if (w === null) return `${shrineName(e.shrine)} is full at ${a} to ${b}. Nobody takes it.`;
+      // Winner's total first, so the line reads the same for every player.
+      const score = w === 0 ? `${a} to ${b}` : `${b} to ${a}`;
+      if (a === b) {
+        const side = isYou(w) ? 'your' : 'their';
+        return `${who(w)} ${verb(w, 'take', 'takes')} ${shrineRef(e.shrine)} on a tie (${score}) for filling ${side} side first.`;
+      }
+      return `${who(w)} ${verb(w, 'take', 'takes')} ${shrineRef(e.shrine)}, ${score}.`;
     }
     case 'gameover':
       return null;
@@ -230,7 +229,7 @@ function startGame(m: Mode, opts: StartOpts = {}) {
   day = opts.day ?? null;
   game = newGame({ seed: opts.seed, rules: isAI() ? spirit.rules : {} });
   log = [
-    `${who(game.current)} ${verb(game.current, 'move', 'moves')} first and ${verb(game.current, 'start', 'starts')} with an extra card.`,
+    `${who(game.current)} ${verb(game.current, 'go', 'goes')} first and ${verb(game.current, 'get', 'gets')} an extra card.`,
   ];
   handoff = mode === 'hotseat';
   seat = game.current;
@@ -477,7 +476,7 @@ function finishGame() {
   $('end-record').textContent = '';
 
   if (isAI()) {
-    title = w === 0 ? 'The tide is yours' : w === 1 ? `${spirit.name} prevails` : 'The sea is calm: a draw';
+    title = w === 0 ? 'You win' : w === 1 ? `${spirit.name} wins` : "It's a draw";
     quote = w === null ? '' : `“${pick(w === 0 ? spirit.quips.lose : spirit.quips.win)}”`;
     later(() => (w === 0 ? (sfx.win(), shower(['#f4b942', '#fcefcb', '#5fc9b5', '#e8ecf4'])) : w === 1 ? sfx.lose() : undefined), 400);
 
@@ -488,7 +487,7 @@ function finishGame() {
       const next = nextSpirit(SPIRIT_ORDER, voyage.beaten);
       const btn = $('btn-next');
       btn.hidden = false;
-      btn.textContent = next < SPIRITS.length ? `Sail on to ${SPIRITS[next].ref}` : 'See the finished voyage';
+      btn.textContent = next < SPIRITS.length ? `Sail on to ${SPIRITS[next].ref}` : 'See the Voyage map';
       $('end-record').textContent =
         next < SPIRITS.length ? `${voyage.beaten.length} of ${SPIRITS.length} spirits beaten.` : 'You have crossed the whole sea.';
       voyageSel = Math.min(next, SPIRITS.length - 1);
@@ -498,7 +497,7 @@ function finishGame() {
       $('btn-share').hidden = false;
       $('btn-share').dataset.share = share;
       $('btn-share').textContent = 'Copy result';
-      $('end-record').textContent = 'A new tide comes in tomorrow.';
+      $('end-record').textContent = 'A new Daily Tide starts tomorrow (UTC).';
     }
   } else {
     title = w === null ? 'A draw' : `Player ${w + 1} wins`;
@@ -507,8 +506,8 @@ function finishGame() {
 
   const taken = (p: PlayerId) => g.shrines.map((sh, i) => (sh.sealed?.winner === p ? shrineRef(i) : null)).filter(Boolean) as string[];
   let text: string;
-  if (w === null) text = `Shrines split ${won[0]} to ${won[1]} with equal totals.`;
-  else if (won[0] === won[1]) text = `Shrines split ${won[0]} to ${won[1]}, so the higher total across all shrines decided it.`;
+  if (w === null) text = 'Each side took one shrine, and the totals were equal.';
+  else if (won[0] === won[1]) text = 'Each side took one shrine, so the higher total across all shrines decided the game.';
   else text = `${who(w)} took ${taken(w).join(' and ')}.`;
   $('end-title').textContent = title;
   $('end-quote').textContent = quote;
@@ -523,7 +522,7 @@ function finishGame() {
 function recordLine(d: Difficulty) {
   const [w, l] = record[d];
   if (w + l === 0) return '';
-  return `Quick duels against the ${d === 'oracle' ? 'Cunning' : 'Gentle'} Oracle: ${w} won, ${l} lost.`;
+  return `Quick duels on ${d === 'oracle' ? 'Hard' : 'Easy'}: ${w} won, ${l} lost.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -563,14 +562,14 @@ function renderTitle() {
   const next = nextSpirit(SPIRIT_ORDER, voyage.beaten);
   $('voyage-desc').textContent =
     beaten === 0
-      ? 'Cross the sea against five tide spirits, each bending the rules.'
+      ? 'Beat five spirits in a row. Each one changes a rule.'
       : next >= SPIRITS.length
-        ? 'Voyage complete. Every spirit beaten. Sail again any time.'
-        : `${beaten} of ${SPIRITS.length} spirits beaten. ${SPIRITS[next].name} waits.`;
+        ? 'All five spirits beaten. Replay any of them.'
+        : `${beaten} of ${SPIRITS.length} spirits beaten. Next: ${SPIRITS[next].ref}.`;
   const today = daily[dayKey(new Date())];
   $('daily-desc').textContent = today
     ? `Today's tide: you ${today.verdict}. Replay it, or come back tomorrow.`
-    : 'One deal a day (UTC), the same for everyone.';
+    : 'The same deal for everyone, new every day (UTC).';
   $('record').textContent = [recordLine('novice'), recordLine('oracle')].filter(Boolean).join(' ');
 }
 
@@ -578,7 +577,7 @@ function renderVoyage() {
   const route = $('route');
   const beatenCount = voyage.beaten.filter((id) => SPIRIT_ORDER.includes(id)).length;
   $('voyage-progress').textContent =
-    beatenCount >= SPIRITS.length ? 'Every spirit beaten. The sea is yours.' : `${beatenCount} of ${SPIRITS.length} spirits beaten`;
+    beatenCount >= SPIRITS.length ? 'All five spirits beaten.' : `${beatenCount} of ${SPIRITS.length} spirits beaten`;
   const next = nextSpirit(SPIRIT_ORDER, voyage.beaten);
   route.replaceChildren(
     ...SPIRITS.map((sp, i) => {
@@ -612,7 +611,7 @@ function renderVoyage() {
       <h3>${sp.name}</h3>
       <blockquote>“${sp.greeting}”</blockquote>
       <p class="spirit-twist">${sp.twist}</p>
-      <p class="spirit-strength">${sp.difficulty === 'novice' ? 'Plays loosely.' : 'Plays to win.'}</p>
+      <p class="spirit-strength">${sp.difficulty === 'novice' ? 'Easy opponent.' : 'Hard opponent.'}</p>
       <button class="btn btn-primary" id="btn-challenge" ${open ? '' : 'disabled'}>${
         open ? `Challenge ${sp.ref}` : `Beat ${SPIRITS[voyageSel - 1].ref} first`
       }</button>
@@ -639,7 +638,7 @@ function buildShrines() {
       <div class="altar">
         <div class="sky" aria-hidden="true"><div class="sky-face sky-sun">${ICON.sun}</div><div class="sky-face sky-moon">${ICON.moon}</div></div>
         <div class="altar-text">
-          <h3 class="altar-name">${name}</h3>
+          <h3 class="altar-name">${name.replace(/^The /, '<span class="the">The </span>')}</h3>
           <p class="altar-sky"></p>
         </div>
         <div class="totals"><span class="total total-top"></span><span class="total total-bottom"></span></div>
@@ -732,7 +731,7 @@ function render() {
   let status: string;
   if (g.over) status = 'Game over';
   else if (handoff) status = `${who(g.current)}, get ready`;
-  else if (isAI() && g.current === 1) status = `${spirit.name} is reading the tide…`;
+  else if (isAI() && g.current === 1) status = `${spirit.name} is thinking…`;
   else if (!canPlay(g)) status = `${who(g.current)} ${verb(g.current, 'have', 'has')} no move`;
   else if (busy) status = '…';
   else status = isAI() ? 'Your move' : `${who(g.current)}, your move`;
@@ -746,7 +745,7 @@ function render() {
   ui.sigilTop.innerHTML = isAI() ? spirit.sigil : '';
   ui.sigilTop.style.color = spirit.hue;
   ui.sigilTop.hidden = !isAI();
-  const twist = mode === 'voyage' && spirit.twist && spirit.id !== 'ferryman' ? spirit.twist : mode === 'daily' && day ? `Daily Tide, ${day} UTC. Everyone gets this same deal today.` : '';
+  const twist = mode === 'voyage' && spirit.twist && spirit.id !== 'ferryman' ? spirit.twist : mode === 'daily' && day ? `Daily Tide for ${day} (UTC). Everyone gets the same deal today.` : '';
   ui.twist.textContent = twist;
   ui.twist.hidden = !twist;
   ui.pipsTop.innerHTML = pips(won[top]);
@@ -792,7 +791,7 @@ function render() {
         seal.className = cls;
         seal.hidden = false;
       }
-      seal.textContent = w === null ? 'Untaken' : isAI() ? (w === 0 ? 'Yours' : spirit.name.replace(/^The /, '')) : `Player ${w + 1}`;
+      seal.textContent = w === null ? 'No one' : isAI() ? (w === 0 ? 'Yours' : spirit.name.replace(/^The /, '')) : `Player ${w + 1}`;
     } else {
       seal.hidden = true;
     }
@@ -832,11 +831,11 @@ function renderTideLine() {
   const n = turnsUntilTide(g);
   const mover = n === 1 ? g.current : other(g.current);
   if (g.rules.fog) {
-    ui.tideLine.innerHTML = `${ICON.wave}<span>Fog hides the tide. It turns after ${whose(mover)} move.</span>`;
+    ui.tideLine.innerHTML = `${ICON.wave}<span>Fog hides the tide. It flips a shrine after ${whose(mover)} move.</span>`;
     return;
   }
-  const held = g.shrines[g.tideMarker].anchored ? ', but the anchor will hold it' : '';
-  ui.tideLine.innerHTML = `${ICON.wave}<span>The tide turns ${shrineRef(g.tideMarker)} after ${whose(mover)} move${held}.</span>`;
+  const held = g.shrines[g.tideMarker].anchored ? ", but it's anchored" : '';
+  ui.tideLine.innerHTML = `${ICON.wave}<span>The tide flips ${shrineRef(g.tideMarker)} after ${whose(mover)} move${held}.</span>`;
 }
 
 function renderHand(yourTurn: boolean) {

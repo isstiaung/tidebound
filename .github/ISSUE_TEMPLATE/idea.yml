@@ -1,0 +1,11 @@
+name: Idea
+description: A new card, spirit, mode or improvement
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would change for a player, and why it would make the game better.
+    validations:
+      required: true
