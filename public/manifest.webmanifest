@@ -1,0 +1,13 @@
+{
+  "name": "Tidebound",
+  "short_name": "Tidebound",
+  "description": "A two-sky card duel. Every card has a sun number and a moon number.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1b2e",
+  "theme_color": "#0d1b2e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
