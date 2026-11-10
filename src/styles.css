@@ -619,7 +619,8 @@ button {
 .side-top {
   align-content: end;
 }
-@container shrine (max-width: 300px) {
+/* 4 across until cards would drop below ~58px; 2x2 doubles the height */
+@container shrine (max-width: 250px) {
   .side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: calc(2 * 74px + 6px);
@@ -1777,6 +1778,228 @@ button {
 }
 .card.just-played {
   z-index: 2;
+}
+
+/* ---------------------------------------------------------------- phones in landscape
+   The screen is short, so everything must fit in one view: four cards across in
+   every shrine, card size driven by the height, and nothing optional on screen. */
+
+@media (orientation: landscape) and (max-height: 520px) {
+  :root {
+    /* card width: what's left of the height after the fixed rows, over ~4.2 card heights */
+    --lw: clamp(34px, calc((100dvh - 186px) / 4.2), 66px);
+  }
+  .game-screen .topbar {
+    padding: 3px var(--gutter);
+  }
+  .game-screen .wordmark-sm {
+    font-size: 18px;
+  }
+  .game-screen .icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  .game-screen .table {
+    gap: 4px;
+    padding: 6px var(--gutter) 4px;
+    max-width: none;
+  }
+  .game-screen .twist,
+  .game-screen .detail {
+    display: none;
+  }
+  .game-screen .player-row {
+    flex-wrap: nowrap;
+    min-height: 22px;
+    gap: 8px;
+  }
+  .game-screen .player-name {
+    font-size: 16px;
+  }
+  .game-screen .sigil {
+    width: 24px;
+    height: 24px;
+  }
+  .game-screen .sigil svg {
+    width: 16px;
+    height: 16px;
+  }
+  .game-screen .opp-hand .card {
+    width: 18px;
+    margin-left: -7px;
+  }
+  .game-screen .tide-line {
+    flex-basis: auto;
+    margin: 0 0 0 auto;
+    font-size: 12.5px;
+    text-align: right;
+  }
+  .game-screen .shrines {
+    gap: 8px;
+  }
+  .game-screen .shrine {
+    padding: 6px;
+    gap: 4px;
+    border-radius: 12px;
+  }
+  .game-screen .shrines .side {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: calc(4 * var(--lw) + 9px);
+    gap: 3px;
+  }
+  .game-screen .shrines .altar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: stretch;
+    gap: 6px;
+    padding: 0 2px;
+  }
+  .game-screen .shrines .altar-text {
+    grid-column: auto;
+    grid-row: auto;
+    text-align: left;
+  }
+  .game-screen .altar-name {
+    font-size: 14px;
+  }
+  .game-screen .altar-name .the,
+  .game-screen .altar-sky {
+    display: none;
+  }
+  .game-screen .shrines .sky {
+    width: 26px;
+    height: 26px;
+  }
+  .game-screen .shrines .sky-face {
+    font-size: 15px;
+  }
+  .game-screen .totals {
+    display: flex;
+    gap: 4px;
+    align-items: baseline;
+  }
+  .game-screen .total {
+    font-size: 16px;
+  }
+  .game-screen .total-top::after {
+    content: ' –';
+    color: var(--muted);
+  }
+  .game-screen .preview {
+    display: none;
+  }
+  .game-screen .tide-flag {
+    top: -9px;
+    width: 34px;
+    height: 18px;
+    font-size: 14px;
+  }
+  .game-screen .seal {
+    font-size: 15px;
+  }
+  .game-screen .hand {
+    min-height: 0;
+    padding-top: 8px;
+    gap: 5px;
+  }
+  .game-screen .hand-card {
+    width: var(--lw);
+  }
+  .game-screen .hand-card.selected {
+    transform: translateY(-7px);
+  }
+  .game-screen .eff {
+    min-width: 16px;
+    height: 16px;
+    font-size: 11px;
+    top: -4px;
+    right: -4px;
+  }
+}
+
+/* ---------------------------------------------------------------- short phones in portrait
+   (e.g. 320x568): tighten everything so the board and hand share one screen. */
+
+@media (orientation: portrait) and (max-height: 680px) {
+  .game-screen .topbar {
+    padding: 3px var(--gutter);
+  }
+  .game-screen .twist,
+  .game-screen .detail {
+    display: none;
+  }
+  .game-screen .table {
+    gap: 5px;
+    padding: 8px var(--gutter) 4px;
+  }
+  .game-screen .player-row {
+    min-height: 22px;
+    gap: 6px;
+  }
+  .game-screen .player-name {
+    font-size: 15px;
+  }
+  .game-screen .sigil {
+    width: 24px;
+    height: 24px;
+  }
+  .game-screen .sigil svg {
+    width: 16px;
+    height: 16px;
+  }
+  .game-screen .opp-hand .card {
+    width: 18px;
+    margin-left: -7px;
+  }
+  .game-screen .tide-line {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .game-screen .shrine {
+    padding: 10px 4px 5px;
+    gap: 4px;
+  }
+  .game-screen .shrines .sky {
+    width: 26px;
+    height: 26px;
+  }
+  .game-screen .shrines .sky-face {
+    font-size: 15px;
+  }
+  .game-screen .shrines .altar {
+    gap: 2px 8px;
+  }
+  .game-screen .total {
+    font-size: 17px;
+  }
+  .game-screen .altar-name {
+    font-size: 13px;
+  }
+  .game-screen .hand {
+    min-height: 0;
+    padding-top: 8px;
+  }
+}
+
+/* very narrow phones: make room in the top bar for the status */
+@media (max-width: 360px) {
+  .game-screen .wordmark-sm {
+    font-size: 17px;
+  }
+  .game-screen .topbar {
+    gap: 6px;
+  }
+  .game-screen .topbar-tools {
+    gap: 0;
+  }
+  .game-screen .icon-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 17px;
+  }
+  .game-screen .status {
+    font-size: 13px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

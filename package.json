@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A two-sky card duel for the browser. Every card has a sun number and a moon number.",
   "license": "MIT",
-  "homepage": "https://isstiaung.github.io/tidebound/",
+  "homepage": "https://tidebound.isstiaung.me/",
   "repository": {
     "type": "git",
     "url": "https://github.com/isstiaung/tidebound.git"

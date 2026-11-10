@@ -4,7 +4,7 @@
 [![Deploy](https://github.com/isstiaung/tidebound/actions/workflows/deploy.yml/badge.svg)](https://github.com/isstiaung/tidebound/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**[Play it in your browser](https://isstiaung.github.io/tidebound/)**. No install or account needed, and it works offline once loaded.
+**[Play it in your browser](https://tidebound.isstiaung.me/)**. No install or account needed. It works offline once loaded, and fits phones (portrait or landscape), tablets and desktops.
 
 Every card has a **sun number** and a **moon number**. Which one counts depends on the sky over its shrine, and the tide keeps flipping the skies. Take two of the three shrines to win.
 
